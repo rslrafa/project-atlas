@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ATLAS — Site Overview</title>
+<link rel="icon" href="ATLAS Logo.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<style>
+:root{--bg:#EAF1FB;--card:#fff;--ink:#0A2A5E;--mute:#5F7596;--line:#D6E3F5;--blue:#0B5FD8;--cyan:#17B8E8;--navy:#0A2A5E;--ok:#10B981}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Arial,sans-serif}
+.top{background:linear-gradient(115deg,#071D45 0%,#0A3C94 55%,#0B5FD8 100%);color:#fff;position:sticky;top:0;z-index:1000;box-shadow:0 4px 18px rgba(10,42,94,.25)}
+.top .in{max-width:1500px;margin:0 auto;padding:10px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:18px}
+.top img{height:78px;width:78px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.ttl h1{margin:0;font-size:26px;letter-spacing:1.5px;font-weight:800}.ttl p{margin:2px 0 0;font-size:13px;color:#B9D4FF}
+nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}nav a{padding:8px 14px;border-radius:10px;font-size:13px;color:#CFE2FF;cursor:pointer}
+nav a:hover{background:rgba(255,255,255,.12)}nav a.on{background:#fff;color:var(--blue);font-weight:600}
+.wrap{max-width:1500px;margin:0 auto;padding:20px 24px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+select,button{font:inherit;font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#F6F9FE;color:var(--ink);max-width:180px}
+button{cursor:pointer}button:hover,select:hover{border-color:var(--blue)}button.p{background:var(--blue);color:#fff;border-color:var(--blue)}
+#status{font-size:12px;color:var(--mute);margin-left:auto}
+#err{display:none;padding:10px 14px;border-radius:12px;margin-bottom:14px;font-size:14px;background:#DCEBFF}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0;box-shadow:0 2px 10px rgba(10,42,94,.05)}
+.card h3{margin:0 0 2px;font-size:15px;font-weight:700}.card .sub{font-size:12px;color:var(--mute);margin-bottom:8px}
+.kpi{grid-column:span 2;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.kpi small{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--mute);font-weight:600}
+.kpi .v{font-size:30px;font-weight:800;margin:4px 0 2px;letter-spacing:-.5px}.kpi .cap{font-size:12px;color:var(--mute)}
+.kpi.big{background:linear-gradient(135deg,#0B5FD8,#17B8E8);color:#fff;border:0}.big small,.big .cap{color:#DDF3FF}
+.ring{width:62px;height:62px;flex-shrink:0}.ring circle{fill:none;stroke-width:7}.ring .bg{stroke:#E3EDFB}.ring .fg{stroke:var(--blue);stroke-linecap:round;transition:stroke-dashoffset .5s;transform:rotate(-90deg);transform-origin:50% 50%}
+.ins{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;grid-column:span 12;padding:0;border:0;background:none;box-shadow:none}
+.chip{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--cyan);border-radius:12px;padding:10px 14px}
+.chip small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--mute)}.chip b{font-size:15px}
+.s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}.s7{grid-column:span 7}.s12{grid-column:span 12}
+.ch{height:300px}#map{height:360px;border-radius:12px}
+.tbl{overflow:auto;max-height:420px}table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:6px 10px;text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}
+th{color:var(--mute);font-weight:600;position:sticky;top:0;background:var(--card)}tfoot td{font-weight:700;border-top:2px solid var(--line)}
+.ph{padding:60px;text-align:center;color:var(--mute)}
+@media(max-width:1000px){.grid>*{grid-column:span 12!important}.kpi{grid-column:span 6!important}.ins{grid-template-columns:1fr 1fr}nav{margin-left:0}}
+</style></head><body>
+<div class="top"><div class="in"><img src="ATLAS Logo.png" alt="ATLAS logo"><div class="ttl"><h1>SITE OVERVIEW</h1><p>Network sites and performance and status at a glance</p></div><nav id="nav"></nav></div></div>
+<div class="wrap">
+<div class="filters" id="filters"></div>
+<div id="err"></div><div id="page"></div></div>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script>
+/* ===== SETUP: paste your values ===== */
+const CFG={API_URL:'https://script.google.com/macros/s/AKfycbxevVMmIPjuTZFM8nCW3M9BcQNe1ccIs5c29kKPXfXM5diFtYkKn8k7HH9V7qwkt0b1FQ/exec',TOKEN:'NationwideAtlas2026',
+ COL:{id:'PLA_ID',name:'Sitename',terr:'Territory',region:'Region',prov:'Province',addr:'Site_Address',lat:'Latitude',lng:'Longitude',
+  du:'Distribution_Utility',status:'Site_Status',cls:'Site_Class',type:'Site_Type',grid:'Grid_Type',sev:'Severity_Tagging',
+  aff:'Tower_Affiliation',gttco:'Tower_Affiliation',close:'Tower_Closing_Status',rms:'RMS_Status',ty:'Typhoon_Path'},
+ // VERIFY these rules against your real category values
+ RULES:{active:v=>v==='active',done:v=>v==='done'||v==='done closing'||v==='closed',
+  rms:v=>['yes','with rms','installed','with'].includes(v),typhoon:v=>v!==''&&!['no','none','n/a','not on path','(blank)'].includes(v)}};
+const norm=v=>(v==null||String(v).trim()==='')?'(blank)':String(v).trim(),low=v=>norm(v).toLowerCase();
+const fmt=n=>n.toLocaleString('en-US'),pct=(a,b)=>b?(a/b*100).toFixed(1)+'%':'—';
+const count=(rows,k)=>{const m=new Map();rows.forEach(r=>m.set(r[k],(m.get(r[k])||0)+1));return m};
+const sorted=m=>[...m.entries()].sort((a,b)=>b[1]-a[1]);
+const cross=(rows,rk,ck)=>{const m=new Map(),cols=new Set();rows.forEach(r=>{cols.add(r[ck]);const o=m.get(r[rk])||m.set(r[rk],{}).get(r[rk]);o[r[ck]]=(o[r[ck]]||0)+1});return{m,cols:[...cols].sort()}};
+const validLL=(a,b)=>isFinite(a)&&isFinite(b)&&a>=4&&a<=22&&b>=116&&b<=127;
+let ALL=[],DUPES=0,F={},charts={},mapObj,cluster,page='Overview';
+const FILTERS=[['terr','Territory'],['region','Region'],['gttco','GT vs TCO'],['status','Site status'],['grid','Grid type']];
+const PAGES=['Overview','Site Details','AC Inventory','Cabin & ACU','RS & Battery','Tower','Search Site'];
+const $=id=>document.getElementById(id);
+
+async function load(){
+ const el=$('err');el.style.display='block';el.textContent='Loading data from Google Sheets… this can take a few seconds.';render();
+ try{
+  if(!CFG.API_URL||!CFG.TOKEN)throw new Error('Set CFG.API_URL and CFG.TOKEN at the top of the script.');
+  const r=await fetch(CFG.API_URL+'?token='+encodeURIComponent(CFG.TOKEN));const j=await r.json();
+  if(j.error)throw new Error('API error: '+j.error);
+  if(j.missing&&j.missing.length)throw new Error('Missing headers in sheet: '+j.missing.join(', '));
+  const seen=new Set();DUPES=0;ALL=[];
+  j.rows.forEach(a=>{const o={};j.headers.forEach((h,i)=>o[h]=a[i]);const k=o[CFG.COL.id];
+   if(k&&seen.has(k)){DUPES++;return}seen.add(k);const rec={};
+   for(const[key,h]of Object.entries(CFG.COL))rec[key]=norm(o[h]);rec.la=parseFloat(o[CFG.COL.lat]);rec.ln=parseFloat(o[CFG.COL.lng]);rec.gttco=/^gt$/i.test(rec.gttco.trim())?'GT':'TCO';ALL.push(rec)});
+  window.UPDATED=new Date(j.updated);el.style.display='none';
+ }catch(e){el.textContent=e.message+' (F12 > Console for details)';el.style.background='#F8D3C8';ALL=[]}
+ buildFilters();render();
+}
+const filtered=()=>ALL.filter(r=>FILTERS.every(([k])=>!F[k]||r[k]===F[k]));
+$('nav').innerHTML=PAGES.map(p=>`<a data-p="${p}">${p}</a>`).join('');
+$('nav').onclick=e=>{if(e.target.dataset.p){page=e.target.dataset.p;render()}};
+function buildFilters(){
+ const b=$('filters');
+ b.innerHTML=FILTERS.map(([k,l])=>`<select data-k="${k}"><option value="">${l}: all</option>`+[...new Set(ALL.map(r=>r[k]))].sort().map(v=>`<option ${F[k]===v?'selected':''}>${v}</option>`).join('')+'</select>').join('')+
+  '<button id="clr">Clear</button><button id="ref" class="p">Refresh</button><span id="status"></span>';
+ b.onchange=e=>{if(e.target.dataset.k){F[e.target.dataset.k]=e.target.value;render()}};
+ $('clr').onclick=()=>{F={};buildFilters();render()};$('ref').onclick=load;
+}
+const ec=(id,o)=>{const el=$(id);if(!el)return;(charts[id]=charts[id]&&!charts[id].isDisposed()?charts[id]:echarts.init(el)).setOption(o,true)};
+const PAL=['#0B5FD8','#17B8E8','#6C4DE0','#F59E0B','#10B981','#EF4444','#64748B','#0A2A5E'];
+const AX={axisLabel:{color:'#5F7596'},axisLine:{lineStyle:{color:'#D6E3F5'}},splitLine:{lineStyle:{color:'#E8F0FB'}}};
+function heat(m,cols,title,rl){
+ const max=Math.max(1,...[...m.values()].flatMap(o=>Object.values(o)));const ct={};let gt=0;
+ const body=[...m.entries()].sort().map(([r,o])=>{const t=cols.reduce((s,c)=>s+(o[c]||0),0);gt+=t;
+  return `<tr><td>${r}</td>${cols.map(c=>{const v=o[c]||0;ct[c]=(ct[c]||0)+v;const a=v?0.1+0.85*v/max:0;
+   return `<td title="${r} / ${c}: ${fmt(v)}" style="background:rgba(11,95,216,${a});color:${a>.5?'#fff':'inherit'}">${v?fmt(v):'·'}</td>`}).join('')}<td><b>${fmt(t)}</b></td></tr>`}).join('');
+ return `<h3>${title}</h3><div class="tbl"><table><thead><tr><th>${rl}</th>${cols.map(c=>`<th>${c}</th>`).join('')}<th>Total</th></tr></thead><tbody>${body}</tbody><tfoot><tr><td>Grand total</td>${cols.map(c=>`<td>${fmt(ct[c]||0)}</td>`).join('')}<td>${fmt(gt)}</td></tr></tfoot></table></div>`;
+}
+function render(){
+ document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===page));
+ const pg=$('page');
+ if(page!=='Overview'){Object.values(charts).forEach(c=>c.dispose());charts={};mapObj&&mapObj.remove();mapObj=null;pg.innerHTML=`<div class="card ph"><h3>${page}</h3>Not built yet — placeholder page.</div>`;return}
+ if(!$('kTot')){
+  pg.innerHTML=`<div class="grid">
+  <div class="card kpi big"><div><small>Total sites</small><div class="v" id="kTot">–</div><div class="cap" id="dup"></div></div></div>
+  ${[['kAct','Active sites'],['kDone','Done closing'],['kRms','With RMS'],['kTy','On typhoon path']].map(([i,l])=>`<div class="card kpi"><div><small>${l}</small><div class="v" id="${i}">–</div><div class="cap" id="${i}c"></div></div><svg class="ring" viewBox="0 0 70 70"><circle class="bg" cx="35" cy="35" r="28"/><circle class="fg" id="${i}r" cx="35" cy="35" r="28" stroke-dasharray="175.9" stroke-dashoffset="175.9"/></svg></div>`).join('')}
+  <div class="card kpi"><div><small>Mapped sites</small><div class="v" id="kMap">–</div><div class="cap" id="mapn"></div></div></div>
+  <div class="ins" id="ins"></div>
+  <div class="card s5"><h3>Sites by territory</h3><div class="sub">Count of sites per territory</div><div class="ch" id="cTerr"></div></div>
+  <div class="card s4"><h3>Status by tower affiliation</h3><div class="sub">GT vs TCO (TCO = every affiliation other than GT) · Active, Inactive, Decommissioned, Nominated only</div><div class="ch" id="cStat"></div></div>
+  <div class="card s3" style="grid-column:span 3"><h3>Site class</h3><div class="sub">Share of sites</div><div class="ch" id="cCls"></div></div>
+  <div class="card s7"><h3>Site map</h3><div class="sub">Clustered by location; zoom to explore</div><div id="map"></div></div>
+  <div class="card s5"><h3>Tower affiliations</h3><div class="sub">Share of sites by tower company</div><div id="cAff" style="height:360px"></div></div>
+  <div class="card s5"><h3>Site type</h3><div class="sub">Top 12 types by count</div><div class="ch" id="cType"></div></div>
+  <div class="card s7" id="tSev"></div><div class="card s12" id="tGrid"></div></div>`;
+  mapObj=L.map('map').setView([12.5,122],5);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:19}).addTo(mapObj);
+  cluster=L.markerClusterGroup({chunkedLoading:true}).addTo(mapObj);
+ }
+ const R=filtered(),n=R.length,c=f=>R.filter(f).length;
+ $('kTot').textContent=fmt(n);$('dup').textContent=DUPES?`${fmt(DUPES)} duplicates excluded`:'';
+ [['kAct',r=>CFG.RULES.active(low(r.status))],['kDone',r=>CFG.RULES.done(low(r.close))],['kRms',r=>CFG.RULES.rms(low(r.rms))],['kTy',r=>CFG.RULES.typhoon(low(r.ty))]]
+  .forEach(([i,f])=>{const k=c(f);$(i).textContent=pct(k,n);$(i+'c').textContent=fmt(k)+' of '+fmt(n)+' sites';$(i+'r').style.strokeDashoffset=175.9*(1-(n?k/n:0))});
+ const bar=(m,t)=>({tooltip:{},grid:{left:10,right:16,top:30,bottom:8,containLabel:true},xAxis:{type:'category',data:m.map(x=>x[0]),axisLabel:{color:'#5F7596',rotate:30,interval:0,hideOverlap:true,formatter:s=>s.length>10?s.slice(0,9)+'…':s},axisLine:AX.axisLine},
+  yAxis:{type:'value',...AX},series:[{type:'bar',data:m.map(x=>x[1]),itemStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#17B8E8'},{offset:1,color:'#0B5FD8'}]},borderRadius:[6,6,0,0]},label:{show:m.length<12,position:'top',color:'#5F7596',fontSize:11},labelLayout:{hideOverlap:true}}]});
+ ec('cTerr',bar([...count(R,'terr').entries()].sort()));ec('cType',bar(sorted(count(R,'type')).slice(0,12)));
+ const STAT=['Active','Inactive','Decommissioned','Nominated'];
+ const sKey=v=>STAT.find(s=>s.toLowerCase()===v.trim().toLowerCase());
+ const x=cross(R.filter(r=>sKey(r.status)).map(r=>({...r,status:sKey(r.status)})),'gttco','status'),gr=['GT','TCO'];
+ ec('cStat',{tooltip:{trigger:'axis'},legend:{bottom:0,itemWidth:14,itemHeight:10,itemGap:12,textStyle:{color:'#5F7596',fontSize:11}},color:PAL,grid:{left:10,right:30,top:15,bottom:60,containLabel:true},xAxis:{type:'value',...AX},yAxis:{type:'category',data:gr,axisLabel:{color:'#5F7596'}},
+  series:STAT.map(s=>({name:s,type:'bar',stack:'t',data:gr.map(g=>(x.m.get(g)||{})[s]||0)}))});
+ const donut=(id,k,big)=>{const dd=sorted(count(R,k));ec(id,{title:{text:fmt(n),subtext:'sites',left:big?'32%':'50%',top:big?'43%':'33%',textAlign:'center',textStyle:{fontSize:22,fontWeight:800,color:'#0A2A5E'},subtextStyle:{color:'#5F7596'}},tooltip:{trigger:'item',formatter:'{b}: {c} ({d}%)'},color:PAL,legend:{type:'scroll',orient:big?'vertical':'horizontal',right:big?0:'center',bottom:big?10:0,top:big?10:'auto',tooltip:{show:true},formatter:nm=>{const e=dd.find(z=>z[0]===nm);return nm+(e?'  '+pct(e[1],n):'')},textStyle:{color:'#5F7596',width:big?150:90,overflow:'truncate'}},
+  series:[{type:'pie',radius:big?['36%','58%']:['38%','56%'],center:[big?'32%':'50%',big?'50%':'40%'],avoidLabelOverlap:true,itemStyle:{borderColor:'#fff',borderWidth:2},label:{position:'outside',formatter:p=>p.percent>=4?p.percent.toFixed(1)+'%':'',color:'#0A2A5E',fontSize:11},labelLine:{show:true,length:8,length2:6},labelLayout:{hideOverlap:true},data:dd.map(([name,value])=>({name,value}))}]})};
+ donut('cCls','cls',false);donut('cAff','aff',true);
+ const GRIDS=['G1','G2','G3','G4','G5 / PRIME'],SEVS=['S0','S1','S2','S3'];
+ const gk=v=>v.toUpperCase().replace(/\s*\/\s*/g,' / ').replace(/\s+/g,' ').trim(),sk=v=>v.toUpperCase().trim();
+ const sv=cross(R.filter(r=>GRIDS.includes(gk(r.grid))&&SEVS.includes(sk(r.sev))).map(r=>({...r,grid:gk(r.grid),sev:sk(r.sev)})),'grid','sev');
+ GRIDS.forEach(g=>{if(!sv.m.has(g))sv.m.set(g,{})});
+ $('tSev').innerHTML=heat(sv.m,SEVS,'Severity by grid type (site count)','Grid type');
+ const gc=cross(R.map(r=>({...r,k:r.du+' › '+r.prov})),'k','grid');$('tGrid').innerHTML=heat(gc.m,gc.cols,'Grid type by utility and province (site count)','Utility › Province');
+ cluster.clearLayers();let bad=0,ok=0;const ms=[];
+ R.forEach(r=>{if(!validLL(r.la,r.ln)){bad++;return}ok++;ms.push(L.circleMarker([r.la,r.ln],{radius:5,color:'#0A3C94',fillColor:'#0B5FD8',fillOpacity:.7,weight:1})
+  .bindPopup(`<b>${r.id}</b> ${r.name}<br>${r.terr} / ${r.region}<br>${r.status} · ${r.type}<br>${r.addr}`))});
+ cluster.addLayers(ms);$('kMap').textContent=fmt(ok);$('mapn').textContent=fmt(bad)+' with missing/invalid coordinates';
+ const top1=(k)=>{const s=sorted(count(R,k).size?new Map([...count(R,k)].filter(e=>e[0]!=='(blank)')):new Map())[0];return s?`${s[0]} · ${pct(s[1],n)}`:'—'};
+ const gl=cross(R,'grid','sev').m;
+ $('ins').innerHTML=[['Largest territory',top1('terr')],['Top tower affiliation',top1('aff')],['Most common site type',top1('type')],['Dominant site class',top1('cls')]].map(([a,b])=>`<div class="chip"><small>${a}</small><b>${b}</b></div>`).join('');
+ if($('status')&&window.UPDATED)$('status').textContent='Updated '+window.UPDATED.toLocaleString();
+}
+addEventListener('resize',()=>Object.values(charts).forEach(c=>c.resize()));
+load();
+</script></body></html>
